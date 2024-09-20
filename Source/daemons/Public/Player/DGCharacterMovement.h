@@ -57,6 +57,8 @@ protected:
 protected:
 	virtual void InitializeComponent() override;
 	virtual void PhysCustom(float DeltaTime, int32 Iterations) override;
+
+	virtual bool CanAttemptJump() const override;
 	
 private:
     void PhysSprint(float DeltaTime, int32 Iterations);
@@ -80,5 +82,4 @@ private:
 	void ChangeCapsuleHalfHeight(float ShortHalfHeight, float DeltaSeconds, float Modifier);
 
 	bool IsCustomMovementMode(const ECustomMovementMode InCustomMovementMode) const;
-
 };

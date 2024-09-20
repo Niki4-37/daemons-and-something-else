@@ -10,20 +10,33 @@ void UDGCharacterMovement::UpdateCharacterStateBeforeMovement(float DeltaSeconds
     const bool bIsCrawling{IsCustomMovementMode(CMOVE_Crawling)};
 
 	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Orange, UEnum::GetValueAsString(TEnumAsByte<ECustomMovementMode>(CustomMovementMode)));
+	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Orange, UEnum::GetValueAsString(TEnumAsByte<EMovementMode>(MovementMode)));
+
+	FFindFloorResult FloorResult;
+	FindFloor(UpdatedComponent->GetComponentLocation(), FloorResult, false);
 
     if (bWantsToSprint                              //
         && !Velocity.IsNearlyZero()                 //
         && !bIsCrouching							//
 		&& !bIsCrawling								//
 		&& !bWantsToCrawling						//
-		&& !bWantsToCrouch)
+		&& !bWantsToCrouch	//
+		&& !IsFalling())
     {
         SetMovementMode(MOVE_Custom, CMOVE_Sprint);
     }
+
+	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Orange, FString::Printf(TEXT("%s"), FloorResult.bWalkableFloor ? TEXT("Has floor") : TEXT("No floor")));
+
     if (!bWantsToSprint && bIsSprinting)
     {
         SetMovementMode(DefaultLandMovementMode);
     }
+
+	if (bIsSprinting && !FloorResult.bWalkableFloor)
+    {
+		SetMovementMode(MOVE_Falling);
+	}
 
 	if (bWantsToCrouch								//
 		&& CanCrouchInCurrentState())				//
@@ -101,9 +114,14 @@ void UDGCharacterMovement::PhysCustom(float DeltaTime, int32 Iterations)
 	}
 }
 
+bool UDGCharacterMovement::CanAttemptJump() const
+{
+    return true;
+}
+
 void UDGCharacterMovement::PhysSprint(float DeltaTime, int32 Iterations) 
 {
-    PhysWalking(DeltaTime, Iterations);
+	PhysWalking(DeltaTime, Iterations);
 }
 
 void UDGCharacterMovement::EnterCrouching(float DeltaSeconds) 
